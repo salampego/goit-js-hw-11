@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,24 +12,20 @@
     />
   </head>
   <body>
-    <header class="header container">
-      <div class="container">
-        <form class="search-form" id="search-form">
-          <input
-            type="text"
-            name="searchQuery"
-            autocomplete="off"
-            placeholder="Search images..."
-            class="header__input--search"
-          />
-          <button type="submit">Search</button>
-        </form>
-      </div>
+    <header class="header">
+      <form class="search-form" id="search-form">
+        <input
+          type="text"
+          name="searchQuery"
+          autocomplete="off"
+          placeholder="Search images..."
+          class="header__input--search"
+        />
+        <button type="submit">Search</button>
+      </form>
     </header>
 
-    <div class="gallery">
-      <!-- Картки зображень -->
-    </div>
+    <div class="gallery"></div>
 
     <script src="./index.js"></script>
   </body>

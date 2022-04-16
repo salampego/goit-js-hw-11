@@ -1,11 +1,7 @@
 .header {
   background: blue;
-}
-.container {
-  padding-left: 15px;
-  padding-right: 15px;
-  margin-left: auto;
-  margin-right: auto;
+  position: fixed;
+  width: 100vw;
 }
 
 .search-form {
@@ -17,4 +13,37 @@
   width: 300px;
   border: transparent;
   height: 30px;
+}
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: 45px;
+}
+.photo-card {
+  margin-top: 30px;
+
+  width: 370px;
+  margin-right: 10px;
+  border: 1px solid #eeeeee;
+  display: flex;
+  flex-wrap: wrap;
+}
+.photo-card:nth-child(4n) {
+  margin-right: 0;
+}
+
+.info {
+  display: flex;
+}
+.info-item {
+  padding-right: 15px;
+  padding-left: 15px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-card__picture {
+  height: 250px;
+  background-size: contain;
 }

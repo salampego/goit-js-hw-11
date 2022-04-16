@@ -1,56 +1,102 @@
 import Notiflix from 'notiflix';
 import './sass/main.scss';
-
-const BASE_URL = 'https://pixabay.com/api';
-const API_KEY = '26652166-68919f4336d4ff6c386516ecc';
+import SimpleLightbox from 'simplelightbox';
+import PixabayPhotos from './js/fetchPhotos';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+import InfiniteScroll from 'infinite-scroll';
+import debounce from 'debounce';
 
 const form = document.querySelector('#search-form');
 const gallery = document.querySelector('.gallery');
 
-form.addEventListener('submit', fetchPhotos);
+const pixabayPhotos = new PixabayPhotos();
+const debounceInfScroll = debounce(onInfinityScroll, 300);
 
-function fetchPhotos(name) {
-  name.preventDefault();
-  const nameInputValue = name.target[0].value;
-  fetch(
-    `${BASE_URL}/?key=${API_KEY}&q=${nameInputValue}&image_type=photo&orientation=horizontal&safesearch=true`,
-  )
-    .then(response => response.json())
-    .then(data => {
-      if (data.total === 0) {
-        gallery.innerHTML = '';
-        Notiflix.Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.',
-        );
-      }
-      const date = data.hits;
-      const markupInfo = markupPhoto(date);
-      gallery.innerHTML = gallery.innerHTML = markupPhoto(date);
-    });
-}
+const onSubmit = e => {
+  e.preventDefault();
+  pixabayPhotos.searchValue = e.currentTarget.elements.searchQuery.value;
+  pixabayPhotos.resetPage();
+  loadMoreFetch();
 
-const markupPhoto = data => {
-  data
-    .map(dat => {
-      return `<p>loh${dat}</p>`;
-    })
-    .join('');
+  setTimeout(() => {
+    if (pixabayPhotos.dataTotal > 0) {
+      Notiflix.Notify.success(`Hooray! We found ${pixabayPhotos.dataTotal} images.`);
+    }
+  }, 1000);
 };
 
-/* <div class="photo-card">
-  <img src="${dat.webformatURL}" alt="${dat.tags}" loading="lazy" />
+const loadMoreFetch = e => {
+  let sumPages = pixabayPhotos.page * 40;
+
+  pixabayPhotos.fetchPhotos().then(data => {
+    pixabayPhotos.dataTotal = data.totalHits;
+    if (data.totalHits === 0 || pixabayPhotos.searchValue == '') {
+      Notiflix.Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.',
+      );
+      return;
+    }
+    if (sumPages >= data.totalHits) {
+      Notiflix.Notify.failure(`We're sorry, but you've reached the end of search results.`);
+      window.removeEventListener('scroll', debounceInfScroll);
+      galleryLightBox.refresh();
+      return;
+    } else {
+      const markupInfo = markupPhoto(data.hits);
+      gallery.insertAdjacentHTML('beforeend', markupInfo);
+      window.addEventListener('scroll', debounceInfScroll);
+      let galleryLightBox = new SimpleLightbox('.photo-card__link');
+      galleryLightBox.refresh();
+    }
+  });
+};
+
+function markupPhoto(data) {
+  return data
+    .map(dat => {
+      const { webformatURL, tags, likes, views, comments, downloads, largeImageURL } = dat;
+
+      return ` <div class="photo-card">
+  <a class ="photo-card__link" href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" width = "369" heigth = "250" class ="photo-card__picture"/></a>
   <div class="info">
     <p class="info-item">
-      <b>Likes ${dat.likes}</b>
+      <b>Likes</b>
+       ${likes}
     </p>
     <p class="info-item">
-      <b>Views ${dat.views}</b>
+      <b>Views</b>
+      ${views}
     </p>
     <p class="info-item">
-      <b>Comments ${dat.comments}</b>
+      <b>Comments</b>
+      ${comments}
     </p>
     <p class="info-item">
-      <b>Downloads ${dat.downloads}</b>
+      <b>Downloads</b>
+      ${downloads}
     </p>
   </div>
-</div>; */
+</div> `;
+    })
+    .join('');
+}
+
+const lazyScroll = () => {
+  const { height: cardHeight } = gallery.firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+};
+
+function onInfinityScroll() {
+  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+  if (scrollTop + clientHeight >= scrollHeight - 6) {
+    loadMoreFetch();
+    lazyScroll();
+  }
+}
+
+form.addEventListener('submit', onSubmit);
