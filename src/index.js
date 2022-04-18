@@ -3,15 +3,15 @@ import './sass/main.scss';
 import SimpleLightbox from 'simplelightbox';
 import PixabayPhotos from './js/fetchPhotos';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import InfiniteScroll from 'infinite-scroll';
-import debounce from 'debounce';
+import throttle from 'lodash.throttle';
 
 const form = document.querySelector('#search-form');
 const gallery = document.querySelector('.gallery');
 
 const pixabayPhotos = new PixabayPhotos();
-const debounceInfScroll = debounce(onInfinityScroll, 300);
+const throttleScroll = throttle(onInfinityScroll, 700);
 
+let galleryLightBox = new SimpleLightbox('.gallery a');
 const onSubmit = e => {
   e.preventDefault();
   pixabayPhotos.searchValue = e.currentTarget.elements.searchQuery.value;
@@ -36,22 +36,44 @@ const loadMoreFetch = e => {
       );
       return;
     }
+    if (pixabayPhotos.dataTotal <= 40) {
+      onSuccesfulFetch(data.hits);
+      return;
+    }
     if (sumPages >= data.totalHits) {
       Notiflix.Notify.failure(`We're sorry, but you've reached the end of search results.`);
-      window.removeEventListener('scroll', debounceInfScroll);
-      galleryLightBox.refresh();
+      window.removeEventListener('scroll', throttleScroll);
       return;
-    } else {
-      const markupInfo = markupPhoto(data.hits);
-      gallery.insertAdjacentHTML('beforeend', markupInfo);
-      window.addEventListener('scroll', debounceInfScroll);
-      let galleryLightBox = new SimpleLightbox('.photo-card__link');
-      galleryLightBox.refresh();
+    }
+    if (pixabayPhotos.dataTotal >= 40) {
+      onSuccesfulmoreFetchs(data.hits);
+      console.log(sumPages, data.totalHits);
     }
   });
 };
 
-function markupPhoto(data) {
+const onSuccesfulFetch = e => {
+  const markupInfo = markupPhoto(e);
+  gallery.insertAdjacentHTML('beforeend', markupInfo);
+  galleryLightBox.refresh();
+};
+
+const onSuccesfulmoreFetchs = e => {
+  const markupInfo = markupPhoto(e);
+  gallery.insertAdjacentHTML('beforeend', markupInfo);
+  window.addEventListener('scroll', throttleScroll);
+  galleryLightBox.refresh();
+};
+const lazyScroll = () => {
+  console.log(gallery.firstElementChild.getBoundingClientRect());
+  const { height: cardHeight } = gallery.firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+};
+const markupPhoto = data => {
   return data
     .map(dat => {
       const { webformatURL, tags, likes, views, comments, downloads, largeImageURL } = dat;
@@ -79,23 +101,15 @@ function markupPhoto(data) {
 </div> `;
     })
     .join('');
-}
-
-const lazyScroll = () => {
-  const { height: cardHeight } = gallery.firstElementChild.getBoundingClientRect();
-
-  window.scrollBy({
-    top: cardHeight * 2,
-    behavior: 'smooth',
-  });
 };
-
 function onInfinityScroll() {
-  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+  const documentRect = document.documentElement.getBoundingClientRect();
 
-  if (scrollTop + clientHeight >= scrollHeight - 6) {
+  if (documentRect.bottom < document.documentElement.clientHeight + 150) {
     loadMoreFetch();
-    lazyScroll();
+    setTimeout(() => {
+      lazyScroll();
+    }, 500);
   }
 }
 

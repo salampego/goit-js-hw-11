@@ -8,8 +8,6 @@ export default class PixabayPhotos {
   }
 
   async fetchPhotos() {
-    // console.log(this);
-
     const url = `https://pixabay.com/api/?key=26652166-68919f4336d4ff6c386516ecc&q=${this.searchValue}&page=${this.page}&per_page=40&image_type=photo&orientation=horizontal&safesearch=true`;
     this.page += 1;
     const response = await axios.get(url);
