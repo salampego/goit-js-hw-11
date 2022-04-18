@@ -3,7 +3,7 @@ const gallery = document.querySelector('.gallery');
 export default class PixabayPhotos {
   constructor() {
     this.searchValue = '';
-    this.page = 1;
+    this.page = 0;
     this.dataTotalHits = 0;
   }
 

@@ -47,7 +47,6 @@ const loadMoreFetch = e => {
     }
     if (pixabayPhotos.dataTotal >= 40) {
       onSuccesfulmoreFetchs(data.hits);
-      console.log(sumPages, data.totalHits);
     }
   });
 };
@@ -65,7 +64,6 @@ const onSuccesfulmoreFetchs = e => {
   galleryLightBox.refresh();
 };
 const lazyScroll = () => {
-  console.log(gallery.firstElementChild.getBoundingClientRect());
   const { height: cardHeight } = gallery.firstElementChild.getBoundingClientRect();
 
   window.scrollBy({
